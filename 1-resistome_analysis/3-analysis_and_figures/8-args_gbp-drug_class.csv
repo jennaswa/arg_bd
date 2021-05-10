@@ -1,0 +1,40 @@
+﻿host,drug_class,rural_arg_gbp,urban_arg_gbp
+chicken,aminoglycoside,46.60084,63.7499
+chicken,beta-lactam,28.76146,30.21784
+chicken,folate pathway antagonist,20.75194,17.35089
+chicken,fosfomycin,0.3640691,0.9747692
+chicken,glycopeptide,1.820345,0.1949538
+chicken,MLS,218.0774,237.0639
+chicken,multidrug,18.93159,25.344
+chicken,nitroimidazole,0,3.314215
+chicken,phenicol,8.00952,7.408246
+chicken,pleuromutilin,0,0.5848615
+chicken,quinolone,3.276622,19.10548
+chicken,steroid antibacterial,0,0.5848615
+chicken,tetracycline,887.6004,1656.523
+goat,aminoglycoside,0.200327,3.250309
+goat,beta-lactam,0.7345324,8.938349
+goat,folate pathway antagonist,0,1.354295
+goat,fosfomycin,0,0
+goat,glycopeptide,0.0667757,0.3385738
+goat,MLS,3.939764,13.06895
+goat,multidrug,0.600981,0.4062886
+goat,nitroimidazole,0,0.1354295
+goat,phenicol,0,0
+goat,pleuromutilin,0,0
+goat,quinolone,0.0667757,0.0677148
+goat,steroid antibacterial,0,0
+goat,tetracycline,27.64513,112.9482
+human,aminoglycoside,6.539904,27.9219
+human,beta-lactam,222.5677,132.352
+human,folate pathway antagonist,3.586399,14.95816
+human,fosfomycin,1.265788,1.329614
+human,glycopeptide,0,0.6094065
+human,MLS,127.7039,97.06183
+human,multidrug,5.766366,3.157833
+human,nitroimidazole,3.797363,12.79754
+human,phenicol,0.8438585,3.102433
+human,pleuromutilin,0,0
+human,quinolone,5.274116,8.58709
+human,steroid antibacterial,0,0
+human,tetracycline,399.1451,611.8441
