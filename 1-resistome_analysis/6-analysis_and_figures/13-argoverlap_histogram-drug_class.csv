@@ -1,0 +1,23 @@
+﻿Community,Class,Chicken,Goat
+Rural,Aminoglycoside,63.63636364,9.090909091
+Rural,Beta-lactam,15.09433962,7.547169811
+Rural,Folate pathway antagonist,57.14285714,0
+Rural,Fosfomycin,0,0
+Rural,Glycopeptide,,
+Rural,MLS,100,25
+Rural,Nitroimidazole,0,0
+Rural,Phenicol,50,0
+Rural,Quinolone,27.27272727,9.090909091
+Rural,Tetracycline,88,44
+Rural,Multidrug,50,50
+Urban,Aminoglycoside,56.25,25
+Urban,Beta-lactam,27.02702703,13.51351351
+Urban,Folate pathway antagonist,70,30
+Urban,Fosfomycin,33.33333333,0
+Urban,Glycopeptide,33.33333333,0
+Urban,MLS,93.33333333,73.33333333
+Urban,Nitroimidazole,50,50
+Urban,Phenicol,60,0
+Urban,Quinolone,62.5,6.25
+Urban,Tetracycline,91.30434783,65.2173913
+Urban,Multidrug,100,100
