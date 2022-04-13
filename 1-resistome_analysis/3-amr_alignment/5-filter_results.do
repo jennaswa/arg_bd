@@ -1,4 +1,3 @@
-
 	/*	Import AMR data
 		ARGs in Bangladesh
 	*/
@@ -7,8 +6,8 @@
 Primary alignments - raw reads
 ------------------------------------------------------------------------------*/
 
-**NOTE-no barcodes detected for RG5, so not included in individual sample analysis
-foreach var in RC2 RC3 RC4 RC5 RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4 UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 RC RG RH UC UG UH {
+**NOTE-no barcodes detected for RG5, so not included in indivdual sample analysis
+foreach var in RC2 RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 RC RG RH UC UG UH {
 
 clear
 import delimited `var'-prim-amrresults.paf, encoding(ISO-8859-1)
@@ -48,10 +47,8 @@ save amr_`var', replace
 }
 
 *import and merge AMR gene class identification
-*phenotypes.txt was obtained from bitbucket.org/genomicepidemiology/resfinder_db/src/master/phenotypes.txt and
-*edited to include amr_gene and amr_allle varaibles
 clear
-import phenotypes_dedup.csv
+import delimited phenotypes_dedup.csv
 
 rename (v1 v2 v3 v4 v5 v6 v7 v8) (amr_target_name amr_drug_class amr_gene amr_allele amr_phenotype amr_pmid amr_mechanism amr_pheno_notes)
 
@@ -62,10 +59,11 @@ foreach var in RC2 RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG
 
 use amr_`var', clear
 
-merge m:1 amr_target_name using amr_gene_classes, nogen
+merge m:1 amr_target_name using amr_gene_classes
+tab amr_target_name if _merge==1
+drop _merge
 
 replace amr_drug_class = "Other" if missing(amr_drug_class)
-
 
 *clean drug class data
 	gen aminoglycoside=0
@@ -90,11 +88,11 @@ replace amr_drug_class = "Other" if missing(amr_drug_class)
 		replace pleuromutilin=1 if amr_drug_class=="Pleuromutilin"
 	gen quinolone=0
 		replace quinolone=1 if amr_drug_class=="Quinolone"
-	gen steroid=0
+	gen steroid=0	
 		replace steroid=1 if amr_drug_class=="Steroid antibacterial"
 	gen tetracycline=0
 		replace tetracycline=1 if amr_drug_class=="Tetracycline"
-
+	
 	gen amr_drug_class_edited=""
 		replace amr_drug_class_edited="Aminoglycoside" if amr_drug_class=="Aminoglycoside"
 		replace amr_drug_class_edited="Beta-lactam" if amr_drug_class=="Beta-lactam"
@@ -126,20 +124,20 @@ append using amr_positive_`var'.dta
 
 }
 
-save amr_positive_all, replace
+save amr_positive_all-`date', replace
 
 use amr_positive_RC2, clear
 
-foreach var in RC3 RC4 RC5 RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4 UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 {
+foreach var in RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 {
 
 append using amr_positive_`var'.dta
 
 }
 
-save amr_positive_all_samples, replace
+save amr_positive_all_samples-`date', replace
 
 *export data for relative abundance figure in R
-use amr_positive_all, clear
+use amr_positive_all-`date', clear
 
 log using amr_abundance.txt, text replace
 
@@ -150,7 +148,7 @@ tab amr_sample_id
 
 log close
 
-use amr_positive_all_samples, clear
+use amr_positive_all_samples-`date', clear
 
 log using amr_abundance_samples.txt, text replace
 bysort amr_sample_id: tab amr_drug_class_edited
@@ -160,21 +158,29 @@ tab amr_sample_id
 
 log close
 
+set matsize 11000
 ssc install xtable
-xtable amr_allele amr_sample_id, filename("otu_table-alleles.xlsx") sheet("alleles") replace
-xtable amr_gene amr_sample_id, filename("otu_table-genes.xlsx") sheet("ARGs") replace
+xtable amr_allele amr_sample_id, filename("otu_table-allelesxlsx") sheet("alleles") replace
+xtable amr_gene amr_sample_id, filename("otu_table-samples.xlsx") sheet("ARGs") replace
 xtable amr_drug_class_edited amr_sample_id, filename("otu_table-drug_class.xlsx") sheet("classes") replace
+
+foreach class in Aminoglycoside Beta-lactam Folate_pathway_antagonist Fosfomycin Glycopeptide MLS Multidrug Nitroimidazole Phenicol Pleuromutilin Quinolone Steroid_antibacterial Tetracycline {
+	preserve
+	replace amr_drug_class_edited="Folate_pathway_antagonist" if amr_drug_class_edited=="Folate pathway antagonist"
+	replace amr_drug_class_edited="Steroid_antibacterial" if amr_drug_class_edited=="Steroid antibacterial"
+	keep if amr_drug_class_edited=="`class'"
+	xtable amr_allele amr_sample_id, filename("otu_table-alleles-`class'.xlsx") sheet("alleles") replace
+	restore
+}
 
 /*------------------------------------------------------------------------------
 Primary alignments - assembled contigs
 ------------------------------------------------------------------------------*/
-
-**NOTE-no barcodes detected for RG5, so not included in individual sample analysis
-**NOTE-no ARGs detected for RC2 contigs, so not included in individual sample analysis
-foreach var in RC3 RC4 RC5 RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4 UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 {
+**NOTE-no barcodes detected for RG5, so not included in indivdual sample analysis
+foreach var in RC2 RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 RC RG RH UC UG UH {
 
 clear
-import delimited `var'-assembly-prim-amrresults.paf, encoding(ISO-8859-1)
+import delimited `var'-assembly-prim-amrresults.paf, encoding(ISO-8859-1) varnames(nonames)
 
 gen amr_sample_id = "`var'"
 rename v1 amr_read_id
@@ -210,15 +216,24 @@ save amr_`var'_assembly, replace
 
 }
 
-*merge AMR gene class identification
-foreach var in RC2 RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 {
+*import and merge AMR gene class identification
+clear
+import delimited phenotypes_dedup.csv
 
-use amr_`var'_assembly, clear
+rename (v1 v2 v3 v4 v5 v6 v7 v8) (amr_target_name amr_drug_class amr_gene amr_allele amr_phenotype amr_pmid amr_mechanism amr_pheno_notes)
 
-merge m:1 amr_target_name using amr_gene_classes, nogen
+save amr_gene_classes_assembly, replace
+
+
+foreach var in RC2 RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 RC RG RH UC UG UH {
+
+use assembly/amr_`var', clear
+
+merge m:1 amr_target_name using amr_gene_classes_assembly
+tab amr_target_name if _merge==1
+drop _merge
 
 replace amr_drug_class = "Other" if missing(amr_drug_class)
-
 
 *clean drug class data
 	gen aminoglycoside=0
@@ -243,11 +258,11 @@ replace amr_drug_class = "Other" if missing(amr_drug_class)
 		replace pleuromutilin=1 if amr_drug_class=="Pleuromutilin"
 	gen quinolone=0
 		replace quinolone=1 if amr_drug_class=="Quinolone"
-	gen steroid=0
+	gen steroid=0	
 		replace steroid=1 if amr_drug_class=="Steroid antibacterial"
 	gen tetracycline=0
 		replace tetracycline=1 if amr_drug_class=="Tetracycline"
-
+	
 	gen amr_drug_class_edited=""
 		replace amr_drug_class_edited="Aminoglycoside" if amr_drug_class=="Aminoglycoside"
 		replace amr_drug_class_edited="Beta-lactam" if amr_drug_class=="Beta-lactam"
@@ -271,9 +286,19 @@ save amr_positive_`var'_assembly, replace
 }
 
 *append files
-use amr_positive_RC3_assembly, clear
+use amr_positive_RC_assembly, clear
 
-foreach var in RC4 RC5 RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4 UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 {
+foreach var in RG RH UC UG UH {
+
+append using amr_positive_`var'_assembly.dta
+
+}
+
+save amr_positive_all_assembly, replace
+
+use amr_positive_RC2_assembly, clear
+
+foreach var in RC3 RC4b RC5b RG2 RG3 RG4 RH1 RH2 RH3 RH4 UC1 UC2 UC4b UC5 UG1 UG2 UG3 UG4 UH1 UH2 UH3 UH4 {
 
 append using amr_positive_`var'_assembly.dta
 

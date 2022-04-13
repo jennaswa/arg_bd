@@ -10,7 +10,7 @@ library(RColorBrewer)
 library(reshape2)
 
 ###PATHOGEN PREVALENCE AND ARG HOSTS - ALLELES
-path <- read.csv("pathogens-assembly.csv")
+path <- read.csv("pathogens_-assembly")
 path <- distinct(path)
 path <- path %>%
   mutate(amr_gene="",
@@ -18,12 +18,13 @@ path <- path %>%
          type="pathogen")
 path <- dplyr::rename(path, amr_allele = amr_gene)
 
-host <- read.csv("pathogens_args_combos-assembly.csv")
+host <- read.csv("pathogens_args_combos-assembly")
 host <- host %>%
   mutate(type="gene")
+host <- subset(host, select=-c(amr_gene))
 
 data <- rbind(host,path)
-cols <- c("sample", "species", "arg", "class", "type")
+cols <- c("sample", "species", "allele", "class", "type")
 colnames(data) <- cols
 data <- data %>%
   mutate(location=as.character(substr(sample,1,1)),
@@ -41,7 +42,7 @@ data$species <- as.character(data$species)
 data$location <- factor(data$location)
 data$host <- factor(data$host, levels=c("Goat","Chicken","Human"))
 data$species <- factor(data$species)
-data$arg <- factor(data$arg)
+data$allele <- factor(data$allele)
 data$type <- factor(data$type)
 
 data$class <- factor(data$class, levels = c("Pathogen present", "Aminoglycoside", "Beta-lactam", "Folate pathway antagonist", "Fosfomycin", "MLS", "Phenicol", "Quinolone", "Tetracycline", "Multidrug"))
@@ -52,24 +53,25 @@ colors <- c("black", "#89C5DA", "orange", "#74D944", "#CD9BCD", "#599861", "#FFC
 
 # Plot
 pdf("pathogens_args_combos-assembly.pdf", useDingbats=FALSE, width=10, height=10)
-arg_hosts <- ggplot(data, aes(x=location, y=reorder(arg, desc(class)), fill=as.factor(class))) +
-  geom_point(aes(shape=type, fill=class), color="black", size=5) + 
-  scale_shape_manual(values=c(21,22), guide=FALSE) +
+arg_hosts <- ggplot(data, aes(x=location, y=reorder(allele, desc(class)), fill=as.factor(class))) +
+  geom_point(aes(shape=type, fill=class), color="black", size=4) + 
+  scale_shape_manual(values=c(21,22), guide="none") +
   scale_fill_manual(values=colors) + 
-  guides(fill=guide_legend(override.aes=list(shape=21))) +
+  guides(fill=guide_legend(override.aes=list(shape=c(22,21,21,21,21,21,21,21,21,21)))) +
   xlab("Community") +
   scale_y_discrete(position="right") +
   theme(panel.background=element_blank(), panel.border=element_rect(color="black", fill=NA, size=2),
         axis.text.x = element_text(size=14, color="black"),
-        axis.text.y = element_text(size=14, color="black"),
+        axis.text.y = element_text(size=12, color="black", face="italic"),
         axis.title.x = element_text(face="bold",size=14,color="black"),
         axis.title.y = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size=10),
+        legend.key = element_blank(),
         strip.background=element_blank(),
-        strip.text.y.left = element_text(angle=0,face="italic",size=14,color="black"),
+        strip.text.y.left = element_text(angle=0,face="italic",size=13,color="black",hjust=1),
         strip.text.x = element_text(face="bold",size=14,color="black")) +
   facet_grid(cols=vars(host), rows=vars(species), scales = "free_y", space = "free_y", switch="y")
 arg_hosts
 dev.off()
-ggsave("pathogens_args_combos-assembly.tiff",width=10,height=10,units="in")
+ggsave("pathogens_args_combos-assembly.png",width=10,height=10,units="in")

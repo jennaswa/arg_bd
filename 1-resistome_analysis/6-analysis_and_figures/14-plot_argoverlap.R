@@ -1,4 +1,4 @@
-# ARG sharing histogram and specific alleles plot
+# ARG overlap histogram and specific alleles plot
 # ARGs in Bangladesh
 
 rm(list=ls())
@@ -25,7 +25,7 @@ argtab <- melt(argtab, id.vars="Community", variable.name="Fecal.Host")
 argtab$Community <- as.character(argtab$Community)
 argtab$Community <- factor(argtab$Community, levels=unique(argtab$Community))
 
-pdf("overlappingARGs-histogram.pdf", useDingbats=FALSE, width=5.5, height=5)
+pdf("overlappingARGs-histogram.pdf", useDingbats=FALSE, width=5.5, height=5.5)
 sharedARGs <- ggplot(argtab, aes(x=Community, y=value, fill=Fecal.Host)) +
   geom_bar(stat="identity", position="dodge", width=1.0, color="black") +
   geom_text(aes(Community, value, label = round(value, digits=2), vjust=-0.5), position=position_dodge(width=1.0), size=6, data = argtab) +
@@ -47,7 +47,7 @@ sharedARGs <- ggplot(argtab, aes(x=Community, y=value, fill=Fecal.Host)) +
   facet_grid(.~Community, scales="free_x", space="free_x")
 sharedARGs
 dev.off()
-ggsave(sharedARGs, file="overlappingARGs-histogram.tiff", width=5.5, height=5, units=c("in"))
+ggsave(sharedARGs, file="overlappingARGs-histogram.tiff", width=5.5, height=5.5, units=c("in"))
 
 ## Histogram by drug class
 
@@ -123,38 +123,135 @@ argtab.df <- merge(argtab.df, class, by="amr_allele")
 argtab.df$amr_drug_class_edited <- as.character(argtab.df$amr_drug_class_edited)
 
 # factor data
-argtab.df$Community <- factor(argtab.df$Community)
-argtab.df$Fecal.Host <- factor(argtab.df$Fecal.Host, levels = c("Human", "Chicken", "Goat"))
-argtab.df$amr_allele <- factor(argtab.df$amr_allele)
-
 argtab.df$amr_drug_class_edited <- factor(argtab.df$amr_drug_class_edited, levels = c("Multidrug", "Tetracycline", "Quinolone", "Phenicol", "Nitroimidazole", "MLS", "Glycopeptide", "Fosfomycin", "Folate pathway antagonist", "Beta-lactam", "Aminoglycoside"))
 
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Aminoglycoside"] <- 1
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Beta-lactam"] <- 1
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Folate pathway antagonist"] <- 1
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Fosfomycin"] <- 1
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Glycopeptide"] <- 1
+argtab.df$plot[argtab.df$amr_drug_class_edited=="MLS"] <- 1
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Nitroimidazole"] <- 2
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Phenicol"] <- 2
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Quinolone"] <- 2
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Tetracycline"] <- 2
+argtab.df$plot[argtab.df$amr_drug_class_edited=="Multidrug"] <- 2
+
 # set up color palettes
-colors <- c("666666", "#DA5724", "#673770", "#D14285", "#FFCC00", "#5E738F", "#599861", "#6DDE88", "#CD9BCD", "#74D944", "orange", "#80C5DA")
+colors.bottom <- c("#DA5724", "#673770", "#D14285", "#FFCC00", "#5E738F")
+colors.top <- c("#599861", "#6DDE88", "#CD9BCD", "#74D944", "orange", "#80C5DA")
+
+# split data in half
+argtab.df.top <- subset(argtab.df, argtab.df$plot==1)
+
+argtab.df.bottom <- subset(argtab.df, argtab.df$plot==2)
+argtab.df.bottom <- rbind(argtab.df.bottom, c("NA1","Human",1,"Urban",NA,NA), c("NA2","Human",1,"Urban",NA,NA), c("NA3","Human",1,"Urban",NA,NA))
+
+argtab.df.top$amr_allele <- factor(argtab.df.top$amr_allele)
+argtab.df.bottom$amr_allele <- factor(argtab.df.bottom$amr_allele)
+argtab.df.top$Community <- factor(argtab.df.top$Community)
+argtab.df.bottom$Community <- factor(argtab.df.bottom$Community)
+argtab.df.top$Fecal.Host <- factor(argtab.df.top$Fecal.Host, levels = c("Human", "Chicken", "Goat"))
+argtab.df.bottom$Fecal.Host <- factor(argtab.df.bottom$Fecal.Host, levels = c("Human", "Chicken", "Goat"))
 
 # plot
-pdf("overlappingAlleles.pdf", useDingbats=FALSE, width=24, height=5)
-overlap <- ggplot(argtab.df, aes(x=reorder(amr_allele, desc(amr_drug_class_edited)), fill=as.factor(amr_drug_class_edited), y=Fecal.Host)) +
-  geom_tile(aes(fill=amr_drug_class_edited), size=5) + 
-  scale_shape_manual(values=c(21,22), guide=FALSE) +
-  scale_fill_manual(values=colors) + 
-  guides(fill=guide_legend(override.aes=list(shape=21), reverse=TRUE)) +
+pdf("overlappingAlleles-top.pdf", useDingbats=FALSE, width=30, height=5)
+overlap.top <- ggplot(argtab.df.top, aes(x=reorder(amr_allele, desc(amr_drug_class_edited)), fill=as.factor(amr_drug_class_edited), y=Fecal.Host)) +
+  geom_tile(aes(fill=amr_drug_class_edited, width=0.95, height=0.95), size=5) + 
+  scale_shape_manual(values=c(21,22), guide="none") +
+  scale_fill_manual(values=colors.top) + 
+  guides(fill=guide_legend(override.aes=list(shape=21), reverse=TRUE, byrow=TRUE)) +
   labs(fill="Drug Class") +
   xlab("Overlapping Alleles") +
   scale_y_discrete(position="left") +
   theme(panel.background=element_blank(), panel.border=element_rect(color="black", fill=NA, size=2),
-        axis.text.x = element_text(face="italic",size=14, color="black", angle=67.5, hjust=1),
+        axis.text.x = element_text(face="italic",size=10, color="black", angle=67.5, hjust=1),
         axis.text.y = element_text(size=14, color="black"),
         axis.title.x = element_text(face="bold",size=14,color="black"),
         axis.title.y = element_blank(),
-        legend.title = element_text(face="bold", size=14),
-        legend.text = element_text(size=14),
+        legend.position = "none",
         strip.background=element_blank(),
         strip.text.y.left = element_text(angle=90,face="bold",size=14,color="black"),
         strip.text.x = element_text(face="bold",size=14,color="black"),
         strip.placement = "outside") +
-  facet_grid(rows=vars(Community), scales = "free_y", space = "free_y", switch="y")
-overlap
+  facet_grid(rows=vars(Community), switch="y")
+overlap.top
 dev.off()
-ggsave("overlappingAlleles.tiff",width=24,height=5,units="in")
+ggsave("overlappingAlleles-top.png",width=30,height=5,units="in")
 
+pdf("overlappingAlleles-top-nolabs.pdf", useDingbats=FALSE, width=30, height=5)
+overlap.top <- ggplot(argtab.df.top, aes(x=reorder(amr_allele, desc(amr_drug_class_edited)), fill=as.factor(amr_drug_class_edited), y=Fecal.Host)) +
+  geom_tile(aes(fill=amr_drug_class_edited, width=0.95, height=0.95), size=5) + 
+  scale_shape_manual(values=c(21,22), guide="none") +
+  scale_fill_manual(values=colors.top) + 
+  guides(fill=guide_legend(override.aes=list(shape=21), reverse=TRUE, byrow=TRUE)) +
+  labs(fill="Drug Class") +
+  xlab("Overlapping Alleles") +
+  scale_y_discrete(position="left") +
+  theme(panel.background=element_blank(), panel.border=element_rect(color="black", fill=NA, size=2),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size=14, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.text.y.left = element_text(angle=90,face="bold",size=14,color="black"),
+        strip.text.x = element_text(face="bold",size=14,color="black"),
+        strip.placement = "outside") +
+  facet_grid(rows=vars(Community), switch="y")
+overlap.top
+dev.off()
+ggsave("overlappingAlleles-top-nolabs.png",width=30,height=5,units="in")
+
+pdf("overlappingAlleles-bottom.pdf", useDingbats=FALSE, width=30, height=5)
+overlap.bottom <- ggplot(argtab.df.bottom, aes(x=reorder(amr_allele, desc(amr_drug_class_edited)), fill=as.factor(amr_drug_class_edited), y=Fecal.Host)) +
+  geom_tile(aes(fill=amr_drug_class_edited, width=0.95, height=0.95), size=5) + 
+  scale_shape_manual(values=c(21,22), guide="none") +
+  scale_fill_manual(values=colors.bottom) + 
+  guides(fill=guide_legend(override.aes=list(shape=21), reverse=TRUE, byrow=TRUE)) +
+  labs(fill="Drug Class") +
+  xlab("Overlapping Alleles") +
+  scale_y_discrete(position="left") +
+  theme(panel.background=element_blank(), panel.border=element_rect(color="black", fill=NA, size=2),
+        axis.text.x = element_text(face="italic",size=10, color="black", angle=67.5, hjust=1),
+        axis.text.y = element_text(size=14, color="black"),
+        axis.title.x = element_text(face="bold",size=14,color="black"),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.text.y.left = element_text(angle=90,face="bold",size=14,color="black"),
+        strip.text.x = element_text(face="bold",size=14,color="black"),
+        strip.placement = "outside") +
+  facet_grid(rows=vars(Community), switch="y")
+overlap.bottom
+dev.off()
+ggsave("overlappingAlleles-bottom.png",width=30,height=5,units="in")
+
+pdf("overlappingAlleles-bottom-nolabs.pdf", useDingbats=FALSE, width=30, height=5)
+overlap.bottom <- ggplot(argtab.df.bottom, aes(x=reorder(amr_allele, desc(amr_drug_class_edited)), fill=as.factor(amr_drug_class_edited), y=Fecal.Host)) +
+  geom_tile(aes(fill=amr_drug_class_edited, width=0.95, height=0.95), size=5) + 
+  scale_shape_manual(values=c(21,22), guide="none") +
+  scale_fill_manual(values=colors.bottom) + 
+  guides(fill=guide_legend(override.aes=list(shape=21), reverse=TRUE, byrow=TRUE)) +
+  labs(fill="Drug Class") +
+  xlab("Overlapping Alleles") +
+  scale_y_discrete(position="left") +
+  theme(panel.background=element_blank(), panel.border=element_rect(color="black", fill=NA, size=2),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size=14, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.text.y.left = element_text(angle=90,face="bold",size=14,color="black"),
+        strip.text.x = element_text(face="bold",size=14,color="black"),
+        strip.placement = "outside") +
+  facet_grid(rows=vars(Community), switch="y")
+overlap.bottom
+dev.off()
+ggsave("overlappingAlleles-bottom-nolabs.png",width=30,height=5,units="in")
+
+pdf("overlappingAlleles.pdf", useDingbats=FALSE, width=30, height=10)
+overlap <- egg::ggarrange(overlap.top, overlap.bottom)
+dev.off()
+ggsave("overlappingAlleles.png",width=30,height=10,units="in")
